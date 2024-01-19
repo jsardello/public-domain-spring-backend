@@ -1,7 +1,7 @@
 FROM openjdk:17-jdk-slim AS build
-VOLUME /tmp
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
+RUN chmod +x mvnw
 RUN ./mvnw dependency:resolve
 
 COPY src src
