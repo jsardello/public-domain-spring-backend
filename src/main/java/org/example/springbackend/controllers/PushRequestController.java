@@ -8,6 +8,8 @@ public class PushRequestController {
 
     @GetMapping("/paymentRequest")
     public void paymentRequest() {
+
         System.out.println("Payment request received");
+
     }
 }
