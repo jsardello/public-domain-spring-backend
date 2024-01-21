@@ -1,17 +1,15 @@
 package org.example.springbackend.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 
 @RestController
 public class PushRequestController {
@@ -26,9 +24,34 @@ public class PushRequestController {
     private String xahauApiSecret;
 
     @GetMapping("/paymentRequest")
-    public void paymentRequest() {
+    public void paymentRequest() throws NoSuchAlgorithmException, KeyManagementException {
 
         System.out.println("Payment request received");
+
+
+        TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[]{};
+                    }
+                }
+        };
+
+        SSLContext sslContext = SSLContext.getInstance("SSL");
+        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+        OkHttpClient.Builder newBuilder = new OkHttpClient.Builder();
+        newBuilder.sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustAllCerts[0]);
+        newBuilder.hostnameVerifier((hostname, session) -> true);
 
         OkHttpClient client = new OkHttpClient().newBuilder().build();
         String requestBody = "{ \n" +
@@ -52,15 +75,9 @@ public class PushRequestController {
                 .header("x-api-secret", xahauApiSecret)
                 .build();
 
-//        ObjectMapper mapper = new ObjectMapper();
-//        ObjectNode json = mapper.readValue(requestBody, ObjectNode.class);
-
         try {
 
             Response response = client.newCall(request).execute();
-//            JSONParser parser = new JSONParser();
-//            json = (JSONObject) parser.parse(response.body().string());
-//            System.out.println(json);
         }
         catch (Exception e) {
 
